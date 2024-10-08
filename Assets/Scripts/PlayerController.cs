@@ -27,9 +27,14 @@ public class PlayerController : MonoBehaviour
     private float verticalRotationSpeed = 240f;
 
     public bool isFirstPerson = true;
-    private bool isGrounded;
+    //private bool isGrounded;
     private Rigidbody rb;
 
+    public float fallingThreshhold = -0.1f;
+
+    [Header("GroundCheckSetting")]
+    public float groundCheckDistance = 0.3f;
+    public float slopedLimit = 45f;
     
     // Start is called before the first frame update
     void Start()
@@ -44,9 +49,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        HandleJump();
         HandleRotation();
         HandleCameraToggle();
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            HandleJump();
+        }
     }
 
     private void FixedUpdate()
@@ -54,13 +63,18 @@ public class PlayerController : MonoBehaviour
         HandleMovement();
     }
 
-    void HandleJump()
+    public void HandleJump()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && isGrounded)
+        if(isGrounded())
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false;
         }
+
+        //if (Input.GetKeyDown(KeyCode.Escape) && isGrounded)
+        //{
+        //    rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        //    isGrounded = false;
+        //}
     }
 
     void SetupCameras()
@@ -114,7 +128,7 @@ public class PlayerController : MonoBehaviour
         firstPersonCamera.gameObject.SetActive(isFirstPerson);
         thirdPersonCamera.gameObject.SetActive(!isFirstPerson);
     }
-    void HandleMovement()
+    public void HandleMovement()
     {
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
@@ -151,8 +165,23 @@ public class PlayerController : MonoBehaviour
         rb.MovePosition(rb.position + movement * moveSpeed * Time.deltaTime);
     }
 
-    private void OnCollisionStay(Collision collision)
+    public bool isFalling()
     {
-        isGrounded = true;
+        return rb.velocity.y < fallingThreshhold && !isGrounded();
     }
+
+    public bool isGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, 2.0f);
+    }
+
+    public float GetVerticalVelocity()
+    {
+        return rb.velocity.y;
+    }
+
+    //private void OnCollisionStay(Collision collision)
+    //{
+    //    isGrounded = true;
+    //}
 }
